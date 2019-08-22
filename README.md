@@ -1,5 +1,5 @@
 <p>
-  <img style="width: 150px;" src="./logo/logo.png" />
+  <img src="./logo/logo.png" width="150" />
 </p>
 
 ## What is Split Time?
