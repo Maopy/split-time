@@ -1,0 +1,24 @@
+{
+  "name": "split-time",
+  "version": "0.0.1",
+  "description": "A JavaScript library for measuring FP/FCP, FMP, TTI, FID. Report real user measurements to tracking tool.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Maopy/split-time.git"
+  },
+  "keywords": [
+    "performance",
+    "FMP",
+    "first meaningful paint"
+  ],
+  "author": "Maopy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Maopy/split-time/issues"
+  },
+  "homepage": "https://github.com/Maopy/split-time#readme"
+}

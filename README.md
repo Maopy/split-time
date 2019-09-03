@@ -1,6 +1,9 @@
-<p>
+<div align="center">
   <img src="./logo/logo.png" width="150" />
-</p>
+  <h1>
+    Split Time
+  </h1>
+</div>
 
 ## What is Split Time?
 
