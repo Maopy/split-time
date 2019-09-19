@@ -1,9 +1,11 @@
 {
   "name": "split-time",
   "version": "0.0.2",
-  "description": "A JavaScript library for measuring FP/FCP, FMP, TTI, FID. Report real user measurements to tracking tool.",
+  "description": "A JavaScript library for measuring FP/FCP, LCP, FID. Report real user measurements to tracking tool.",
   "main": "src/index.js",
   "scripts": {
+    "start": "tsc -w & rollup -c rollup.config.ts -w",
+    "build": "tsc && tsc --module commonjs --outDir dist/lib && rollup -c rollup.config.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -11,14 +13,28 @@
     "url": "git+https://github.com/Maopy/split-time.git"
   },
   "keywords": [
-    "performance",
-    "FMP",
-    "first meaningful paint"
+    "performance-metrics",
+    "first-paint",
+    "first-contentful-paint",
+    "largest-contentful-paint",
+    "first-input-delay",
+    "web-performance",
+    "webperf"
   ],
   "author": "Maopy",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Maopy/split-time/issues"
   },
-  "homepage": "https://github.com/Maopy/split-time#readme"
+  "homepage": "https://github.com/Maopy/split-time#readme",
+  "type": "module",
+  "types": "src/@types/index.d.ts",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.8.0",
+    "@typescript-eslint/parser": "^2.8.0",
+    "eslint": "^6.7.0",
+    "eslint-config-standard": "^14.1.0",
+    "rollup": "^1.27.4",
+    "typescript": "^3.7.2"
+  }
 }

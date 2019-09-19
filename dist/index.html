@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script>
+    // new PerformanceObserver((list, observer) => {
+    //   console.log(observer)
+    //   console.log(list.getEntries(), 222)
+    // })
+    //   .observe({
+    //     type: 'resource',
+    //     buffered: true
+    //   })
+    new PerformanceObserver((list, observer) => {
+      console.log(list.getEntries(), 'native')
+    })
+      .observe({
+        entryTypes: ['navigation', 'resource']
+      })
+  </script>
+</head>
+<body>
+  <script src="split_time.js"></script>
+  <script>
+    console.log(performance.getEntries())
+  
+    new SplitTime.default((list, observer) => {
+      console.log(observer)
+      console.log(list.getEntries(), 'split-time')
+    })
+      .observe({
+        entryTypes: ['navigation', 'resource', 'test']
+      })
+  </script>
+</body>
+</html>
