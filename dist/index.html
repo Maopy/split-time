@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
+  <script src="split_time.js"></script>
+  <script>
+    new SplitTime.default((list, observer) => {
+      console.log(observer)
+      console.log(list.getEntries(), 'split-time')
+    })
+      .observe({
+        entryTypes: ['navigation', 'resource', 'paint']
+      })
+  </script>
   <script>
     // new PerformanceObserver((list, observer) => {
     //   console.log(observer)
@@ -18,22 +28,11 @@
       console.log(list.getEntries(), 'native')
     })
       .observe({
-        entryTypes: ['navigation', 'resource']
+        entryTypes: ['navigation', 'resource', 'paint']
       })
   </script>
 </head>
 <body>
-  <script src="split_time.js"></script>
-  <script>
-    console.log(performance.getEntries())
-  
-    new SplitTime.default((list, observer) => {
-      console.log(observer)
-      console.log(list.getEntries(), 'split-time')
-    })
-      .observe({
-        entryTypes: ['navigation', 'resource', 'test']
-      })
-  </script>
+  <h1>Performance Observer</h1>
 </body>
 </html>

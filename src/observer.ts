@@ -1,8 +1,9 @@
 import TaskQueue from './task-queue'
 import EntryList from './entry-list'
 import { ifSupported, totalEntryTypes } from './utils'
+import { observe as PaintObserve } from './timing/paint'
 
-const globalTaskQueue = new TaskQueue() // 是否可以写成 static?
+const globalTaskQueue = new TaskQueue()
 
 class SplitTime implements SplitTime {
   static readonly supportedEntryTypes: string[] = []
@@ -10,6 +11,7 @@ class SplitTime implements SplitTime {
   public callback: PerformanceObserverCallback
   public buffer: Set<PerformanceEntry>
   public entryTypes: string[] = []
+  public unsupportedEntryTypes: string[] = []
   public useNative: Boolean
   private taskQueue: TaskQueue
 
@@ -28,13 +30,15 @@ class SplitTime implements SplitTime {
     // TODO: 支持 bufferd
     const { entryTypes } = options
     let supportedOptionsEntryTypes = []
-    let unsupportedOptionsEntryTypes = entryTypes
+
+    this.entryTypes = entryTypes
+    this.unsupportedEntryTypes = entryTypes
 
     if (ifSupported) {
       const { supportedEntryTypes } = PerformanceObserver
       const supportedEntryTypesSet = new Set(supportedEntryTypes)
       supportedOptionsEntryTypes = entryTypes.filter((entryType) => supportedEntryTypesSet.has(entryType))
-      unsupportedOptionsEntryTypes = entryTypes.filter((entryType) => !supportedEntryTypesSet.has(entryType))
+      this.unsupportedEntryTypes = entryTypes.filter((entryType) => !supportedEntryTypesSet.has(entryType))
 
       if (supportedOptionsEntryTypes.length) {
         this.useNative = true
@@ -46,8 +50,17 @@ class SplitTime implements SplitTime {
       }
     }
 
-    if (unsupportedOptionsEntryTypes.length) {
-      this.entryTypes = unsupportedOptionsEntryTypes
+    if (this.unsupportedEntryTypes.length) {
+      this.unsupportedEntryTypes.forEach((entryType) => {
+        switch (entryType) {
+          case 'paint':
+            PaintObserve()
+              .then((entries) => {
+                this.taskQueue.performanceEntries = new Set([...this.taskQueue.performanceEntries, ...entries])
+              })
+            break
+        }
+      })
       this.taskQueue.add(this)
     }
   }
@@ -62,6 +75,7 @@ class SplitTime implements SplitTime {
   }
 
   private processEntries(list?: PerformanceObserverEntryList):void {
+    this.useNative = true
     const entries = Array.from(this.buffer)
     const nativeEntries = (list && list.getEntries()) || []
     // Combine entries from native & SplitTime
@@ -69,6 +83,11 @@ class SplitTime implements SplitTime {
     this.buffer.clear()
 
     this.callback(entryList, this)
+
+    // if native callback isn't called for a long time & buffer is still not empty, call split-time process method
+    self.setTimeout(() => {
+      this.useNative = false
+    }, 1000)
   }
 }
 

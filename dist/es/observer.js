@@ -1,10 +1,12 @@
 import TaskQueue from './task-queue';
 import EntryList from './entry-list';
 import { ifSupported } from './utils';
-const globalTaskQueue = new TaskQueue(); // 是否可以写成 static?
+import { observe as PaintObserve } from './timing/paint';
+const globalTaskQueue = new TaskQueue();
 class SplitTime {
     constructor(callback) {
         this.entryTypes = [];
+        this.unsupportedEntryTypes = [];
         this.callback = callback;
         this.buffer = new Set();
         this.taskQueue = globalTaskQueue;
@@ -16,12 +18,13 @@ class SplitTime {
         // TODO: 支持 bufferd
         const { entryTypes } = options;
         let supportedOptionsEntryTypes = [];
-        let unsupportedOptionsEntryTypes = entryTypes;
+        this.entryTypes = entryTypes;
+        this.unsupportedEntryTypes = entryTypes;
         if (ifSupported) {
             const { supportedEntryTypes } = PerformanceObserver;
             const supportedEntryTypesSet = new Set(supportedEntryTypes);
             supportedOptionsEntryTypes = entryTypes.filter((entryType) => supportedEntryTypesSet.has(entryType));
-            unsupportedOptionsEntryTypes = entryTypes.filter((entryType) => !supportedEntryTypesSet.has(entryType));
+            this.unsupportedEntryTypes = entryTypes.filter((entryType) => !supportedEntryTypesSet.has(entryType));
             if (supportedOptionsEntryTypes.length) {
                 this.useNative = true;
                 new PerformanceObserver((list, observer) => {
@@ -30,8 +33,17 @@ class SplitTime {
                     .observe({ entryTypes: supportedOptionsEntryTypes });
             }
         }
-        if (unsupportedOptionsEntryTypes.length) {
-            this.entryTypes = unsupportedOptionsEntryTypes;
+        if (this.unsupportedEntryTypes.length) {
+            this.unsupportedEntryTypes.forEach((entryType) => {
+                switch (entryType) {
+                    case 'paint':
+                        PaintObserve()
+                            .then((entries) => {
+                            this.taskQueue.performanceEntries = new Set([...this.taskQueue.performanceEntries, ...entries]);
+                        });
+                        break;
+                }
+            });
             this.taskQueue.add(this);
         }
     }
@@ -43,12 +55,17 @@ class SplitTime {
         return new EntryList(entries);
     }
     processEntries(list) {
+        this.useNative = true;
         const entries = Array.from(this.buffer);
         const nativeEntries = (list && list.getEntries()) || [];
         // Combine entries from native & SplitTime
         const entryList = new EntryList([...entries, ...nativeEntries]);
         this.buffer.clear();
         this.callback(entryList, this);
+        // if native callback isn't called for a long time & buffer is still not empty, call split-time process method
+        self.setTimeout(() => {
+            this.useNative = false;
+        }, 1000);
     }
 }
 SplitTime.supportedEntryTypes = [];

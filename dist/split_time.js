@@ -25,16 +25,16 @@
 
     const INTERVAL = 100;
     class TaskQueue {
-        constructor({ registeredObservers = new Set(), processedEntries = new Set() } = {}) {
-            this.registeredObservers = registeredObservers;
-            this.processedEntries = processedEntries;
+        constructor(registeredObservers, processedEntries) {
+            this.registeredObservers = registeredObservers || new Set();
+            this.processedEntries = processedEntries || new Set();
+            this.performanceEntries = new Set();
             this.timerId = null;
         }
-        // 添加一个 task
         add(observer) {
-            this.registeredObservers.add(observer); // 注册一个 observer
-            if (this.registeredObservers.size === 1) { // 只在刚有 observer 的时候监听一次
-                this.observe(); // 开始监听
+            this.registeredObservers.add(observer);
+            if (this.registeredObservers.size === 1) {
+                this.observe();
             }
         }
         remove(observer) {
@@ -49,6 +49,23 @@
         }
         // call callbacks function when CPU idle
         idleCallback() {
+        }
+        // Polling
+        observe() {
+            this.timerId = self.setInterval(this.processEntries.bind(this), INTERVAL);
+        }
+        processEntries() {
+            const entries = this.getNewEntries();
+            entries.forEach((entry) => {
+                const { entryType } = entry;
+                const observers = this.getObserversForType(this.registeredObservers, entryType);
+                // Add the entry to observer buffer
+                observers.forEach((observer) => {
+                    observer.buffer.add(entry);
+                });
+                // Mark the entry as processed
+                this.processedEntries.add(entry);
+            });
             // Queue task to process all observer buffers
             const task = () => this.registeredObservers.forEach(this.processBuffer);
             if ('requestAnimationFrame' in self) {
@@ -58,54 +75,66 @@
                 self.setTimeout(task, 0);
             }
         }
-        // 监听
-        observe() {
-            // 利用 interval 不断执行
-            this.timerId = self.setInterval(this.processEntries.bind(this), INTERVAL);
-        }
-        // 执行条目
-        processEntries() {
-            const entries = this.getNewEntries(); // 获取新的性能条目
-            entries.forEach((entry) => {
-                const { entryType } = entry;
-                const observers = this.getObserversForType(this.registeredObservers, entryType); // 获取 entryType 的 entry
-                // Add the entry to observer buffer
-                observers.forEach((observer) => {
-                    observer.buffer.add(entry);
-                });
-                // Mark the entry as processed
-                this.processedEntries.add(entry);
-            });
-            this.idleCallback();
-        }
-        // 调用 callback 返回一次 observe 的 buffer，buffer 中是这次所有的 entry
         processBuffer(observer) {
+            // if use native observer, call callback function when native observers call
+            if (observer.useNative)
+                return;
             const entries = Array.from(observer.buffer);
             const entryList = new EntryList(entries);
             observer.buffer.clear();
             if (entries.length && observer.callback) {
-                !observer.useNative && observer.callback.call(undefined, entryList, observer);
+                observer.callback.call(undefined, entryList, observer);
             }
         }
         getNewEntries() {
-            // TODO: 扩充 entry 来源
             const entries = self.performance.getEntries();
-            return entries.filter((entry) => !this.processedEntries.has(entry));
+            const totalEntries = [...entries, ...this.performanceEntries];
+            return totalEntries.filter((entry) => !this.processedEntries.has(entry));
         }
         getObserversForType(observers, type) {
             return Array.from(observers)
-                .filter((observer) => observer.entryTypes.some((t) => t === type));
+                .filter((observer) => observer.unsupportedEntryTypes.some((t) => t === type));
         }
     }
-    //# sourceMappingURL=task-queue.js.map
 
     const ifSupported = 'PerformanceObserver' in self && typeof PerformanceObserver === 'function';
     //# sourceMappingURL=utils.js.map
 
-    const globalTaskQueue = new TaskQueue(); // 是否可以写成 static?
+    const observe = () => {
+        const INTERVAL = 100;
+        let pollingTimerId = null;
+        return new Promise((resolve, reject) => {
+            pollingTimerId = self.setInterval(() => {
+                const { timing } = self.performance;
+                const { domContentLoadedEventStart, domContentLoadedEventEnd, navigationStart } = timing;
+                if (domContentLoadedEventStart && domContentLoadedEventEnd && navigationStart) {
+                    self.clearInterval(pollingTimerId);
+                    resolve([
+                        new PerformancePaintTiming('first-paint', domContentLoadedEventStart - navigationStart),
+                        new PerformancePaintTiming('first-contentful-paint', domContentLoadedEventEnd - navigationStart)
+                    ]);
+                }
+            }, INTERVAL);
+        });
+    };
+    class PerformancePaintTiming {
+        constructor(name, startTime) {
+            this.duration = 0;
+            this.entryType = 'paint';
+            this.name = name;
+            this.startTime = startTime;
+        }
+        toJSON() {
+            return JSON.stringify(this);
+        }
+    }
+    //# sourceMappingURL=paint.js.map
+
+    const globalTaskQueue = new TaskQueue();
     class SplitTime {
         constructor(callback) {
             this.entryTypes = [];
+            this.unsupportedEntryTypes = [];
             this.callback = callback;
             this.buffer = new Set();
             this.taskQueue = globalTaskQueue;
@@ -117,12 +146,13 @@
             // TODO: 支持 bufferd
             const { entryTypes } = options;
             let supportedOptionsEntryTypes = [];
-            let unsupportedOptionsEntryTypes = entryTypes;
+            this.entryTypes = entryTypes;
+            this.unsupportedEntryTypes = entryTypes;
             if (ifSupported) {
                 const { supportedEntryTypes } = PerformanceObserver;
                 const supportedEntryTypesSet = new Set(supportedEntryTypes);
                 supportedOptionsEntryTypes = entryTypes.filter((entryType) => supportedEntryTypesSet.has(entryType));
-                unsupportedOptionsEntryTypes = entryTypes.filter((entryType) => !supportedEntryTypesSet.has(entryType));
+                this.unsupportedEntryTypes = entryTypes.filter((entryType) => !supportedEntryTypesSet.has(entryType));
                 if (supportedOptionsEntryTypes.length) {
                     this.useNative = true;
                     new PerformanceObserver((list, observer) => {
@@ -131,8 +161,17 @@
                         .observe({ entryTypes: supportedOptionsEntryTypes });
                 }
             }
-            if (unsupportedOptionsEntryTypes.length) {
-                this.entryTypes = unsupportedOptionsEntryTypes;
+            if (this.unsupportedEntryTypes.length) {
+                this.unsupportedEntryTypes.forEach((entryType) => {
+                    switch (entryType) {
+                        case 'paint':
+                            observe()
+                                .then((entries) => {
+                                this.taskQueue.performanceEntries = new Set([...this.taskQueue.performanceEntries, ...entries]);
+                            });
+                            break;
+                    }
+                });
                 this.taskQueue.add(this);
             }
         }
@@ -144,15 +183,21 @@
             return new EntryList(entries);
         }
         processEntries(list) {
+            this.useNative = true;
             const entries = Array.from(this.buffer);
             const nativeEntries = (list && list.getEntries()) || [];
             // Combine entries from native & SplitTime
             const entryList = new EntryList([...entries, ...nativeEntries]);
             this.buffer.clear();
             this.callback(entryList, this);
+            // if native callback isn't called for a long time & buffer is still not empty, call split-time process method
+            self.setTimeout(() => {
+                this.useNative = false;
+            }, 1000);
         }
     }
     SplitTime.supportedEntryTypes = [];
+    //# sourceMappingURL=observer.js.map
 
     //# sourceMappingURL=index.js.map
 

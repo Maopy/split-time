@@ -1,13 +1,10 @@
 import SplitTime from './observer';
-interface TaskQueueOptions {
-    registeredObservers?: Set<SplitTime>;
-    processedEntries?: Set<PerformanceEntry>;
-}
 declare class TaskQueue {
     private registeredObservers;
     private processedEntries;
     private timerId;
-    constructor({ registeredObservers, processedEntries }?: TaskQueueOptions);
+    performanceEntries: Set<PerformanceEntry>;
+    constructor(registeredObservers?: Set<SplitTime>, processedEntries?: Set<PerformanceEntry>);
     add(observer: SplitTime): void;
     remove(observer: SplitTime): void;
     disconnect(): void;

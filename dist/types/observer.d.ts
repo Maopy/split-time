@@ -3,6 +3,7 @@ declare class SplitTime implements SplitTime {
     callback: PerformanceObserverCallback;
     buffer: Set<PerformanceEntry>;
     entryTypes: string[];
+    unsupportedEntryTypes: string[];
     useNative: Boolean;
     private taskQueue;
     constructor(callback: PerformanceObserverCallback);
