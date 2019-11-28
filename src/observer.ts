@@ -2,6 +2,7 @@ import TaskQueue from './task-queue'
 import EntryList from './entry-list'
 import { ifSupported, totalEntryTypes } from './utils'
 import { observe as PaintObserve } from './timing/paint'
+import { observe as LCPObserve } from './timing/largest-contentful-paint'
 
 const globalTaskQueue = new TaskQueue()
 
@@ -59,6 +60,11 @@ class SplitTime implements SplitTime {
                 this.taskQueue.performanceEntries = new Set([...this.taskQueue.performanceEntries, ...entries])
               })
             break
+          case 'largest-contentful-paint':
+            LCPObserve()
+              .then((entries) => {
+                this.taskQueue.performanceEntries = new Set([...this.taskQueue.performanceEntries, ...entries])
+              })
         }
       })
       this.taskQueue.add(this)

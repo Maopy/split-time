@@ -43,6 +43,7 @@ class TaskQueue {
             this.processedEntries.add(entry);
         });
         // Queue task to process all observer buffers
+        // TODO: wait for CPU idle
         const task = () => this.registeredObservers.forEach(this.processBuffer);
         if ('requestAnimationFrame' in self) {
             self.requestAnimationFrame(task);

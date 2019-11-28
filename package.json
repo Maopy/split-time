@@ -1,7 +1,7 @@
 {
   "name": "split-time",
   "version": "0.0.2",
-  "description": "A JavaScript library for measuring FP/FCP, LCP, FID. Report real user measurements to tracking tool.",
+  "description": "A JavaScript library for measuring FCP, LCP. Report real user measurements to tracking tool.",
   "main": "src/index.js",
   "scripts": {
     "start": "tsc -w & rollup -c rollup.config.ts -w",
@@ -14,10 +14,8 @@
   },
   "keywords": [
     "performance-metrics",
-    "first-paint",
     "first-contentful-paint",
     "largest-contentful-paint",
-    "first-input-delay",
     "web-performance",
     "webperf"
   ],

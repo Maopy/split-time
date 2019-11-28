@@ -7,7 +7,7 @@
 
 ## What is Split Time?
 
-A JavaScript library for measuring FP/FCP, FMP, TTI, FID. Report real user measurements to tracking tool.
+A JavaScript library for measuring FCP, LCP. Report real user measurements to tracking tool.
 
 ## License
 
