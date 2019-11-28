@@ -282,7 +282,7 @@
             return (overlapX * overlapY) / (width * height);
         }
         function initResourceMap() {
-            self.performance.getEntries().forEach(item => {
+            self.performance.getEntries().forEach((item) => {
                 mp[item.name] = item.responseEnd;
             });
         }
@@ -469,6 +469,7 @@
         }
     }
     SplitTime.supportedEntryTypes = [];
+    //# sourceMappingURL=observer.js.map
 
     //# sourceMappingURL=index.js.map
 

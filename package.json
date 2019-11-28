@@ -4,8 +4,9 @@
   "description": "A JavaScript library for measuring FCP, LCP. Report real user measurements to tracking tool.",
   "main": "src/index.js",
   "scripts": {
-    "start": "tsc -w & rollup -c rollup.config.ts -w",
-    "build": "tsc && tsc --module commonjs --outDir dist/lib && rollup -c rollup.config.ts",
+    "start": "tsc -w & NODE_ENV=development rollup -c rollup.config.ts -w",
+    "prebuild": "",
+    "build": "tsc && tsc --module commonjs --outDir dist/lib && NODE_ENV=production rollup -c rollup.config.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -32,7 +33,10 @@
     "@typescript-eslint/parser": "^2.8.0",
     "eslint": "^6.7.0",
     "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-standard": "^4.0.1",
+    "rimraf": "^3.0.0",
     "rollup": "^1.27.4",
+    "rollup-plugin-terser": "^5.1.2",
     "typescript": "^3.7.2"
   }
 }

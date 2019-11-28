@@ -11,7 +11,7 @@ interface LargestContentfulPaint extends PerformanceEntry {
   url: string
 }
 
-const MutationObserver = self.MutationObserver || self.WebKitMutationObserver
+const MutationObserver = self.MutationObserver || (<any>self).WebKitMutationObserver
 const TAG_WEIGHT_MAP = {
   SVG: 2,
   IMG: 2,
@@ -23,7 +23,7 @@ const TAG_WEIGHT_MAP = {
 const WW = self.innerWidth
 const WH = self.innerHeight
 
-function getStyle (element, att) {
+function getStyle(element, att) {
   return self.getComputedStyle(element)[att]
 }
 
@@ -42,14 +42,14 @@ export const observe = (): Promise<Array<LargestContentfulPaint>> => {
   })
   mutationObserver.observe(document, { childList: true, subtree: true })
 
-  function getSnapshot () {
+  function getSnapshot() {
     const { navigationStart } = self.performance.timing
     const timestamp = Date.now() - navigationStart
     setMutationRecord(document, mutationCount++)
     endpoints.push({ timestamp })
   }
 
-  function setMutationRecord (target, mutationCount) {
+  function setMutationRecord(target, mutationCount) {
     const tagName = target.tagName
     const IGNORE_TAG_SET = new Set(['META', 'LINK', 'STYLE', 'SCRIPT', 'NOSCRIPT'])
 
@@ -64,13 +64,13 @@ export const observe = (): Promise<Array<LargestContentfulPaint>> => {
     }
   }
 
-  function ifRipe (start) {
+  function ifRipe(start) {
     const LIMIT = 1000
     const ti = Date.now() - start
     return ti > LIMIT || ti - (endpoints[endpoints.length - 1].timestamp) > 1000
   }
 
-  function rescheduleTimer () {
+  function rescheduleTimer() {
     const { navigationStart } = self.performance.timing
     const DELAY = 500
 
@@ -86,7 +86,7 @@ export const observe = (): Promise<Array<LargestContentfulPaint>> => {
     }
   }
 
-  function checkLCP () {
+  function checkLCP() {
     isChecking = true
 
     let res = deepTraversal(document.body)
@@ -110,7 +110,7 @@ export const observe = (): Promise<Array<LargestContentfulPaint>> => {
     disable()
   }
 
-  function deepTraversal (node) {
+  function deepTraversal(node) {
     if (node) {
       let dpss = []
 
@@ -126,7 +126,7 @@ export const observe = (): Promise<Array<LargestContentfulPaint>> => {
     return {}
   }
 
-  function calScore (node, dpss) {
+  function calScore(node, dpss): any {
     let {
       width,
       height,
@@ -181,7 +181,7 @@ export const observe = (): Promise<Array<LargestContentfulPaint>> => {
     }
   }
 
-  function calAreaPercent (node) {
+  function calAreaPercent(node) {
     let {
       left,
       right,
@@ -211,13 +211,13 @@ export const observe = (): Promise<Array<LargestContentfulPaint>> => {
     return (overlapX * overlapY) / (width * height)
   }
 
-  function initResourceMap () {
-    self.performance.getEntries().forEach(item => {
+  function initResourceMap() {
+    self.performance.getEntries().forEach((item: PerformanceResourceTiming) => {
       mp[item.name] = item.responseEnd
     })
   }
 
-  function filterTheResultSet (els) {
+  function filterTheResultSet(els) {
     let sum = 0
     els.forEach(item => {
       sum += item.st
@@ -230,7 +230,7 @@ export const observe = (): Promise<Array<LargestContentfulPaint>> => {
     })
   }
 
-  function calResult (resultSet) {
+  function calResult(resultSet) {
     let result = null
     let rt = 0
 
@@ -283,13 +283,13 @@ export const observe = (): Promise<Array<LargestContentfulPaint>> => {
     return options
   }
 
-  function disable () {
+  function disable() {
     clearTimeout(timerId)
     scheduleTimerTasks = false
     unregisterListeners()
   }
 
-  function unregisterListeners () {
+  function unregisterListeners() {
     if (mutationObserver) mutationObserver.disconnect()
   }
 
@@ -322,7 +322,7 @@ class LargestContentfulPaint implements LargestContentfulPaint {
   public startTime: number = 0
   public url: string = ''
 
-  public constructor (options) {
+  public constructor(options) {
     this.element = options.element
     this.id = options.id
     this.loadTime = options.loadTime || 0

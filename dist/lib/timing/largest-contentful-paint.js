@@ -1,3 +1,5 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const MutationObserver = self.MutationObserver || self.WebKitMutationObserver;
 const TAG_WEIGHT_MAP = {
     SVG: 2,
@@ -12,7 +14,7 @@ const WH = self.innerHeight;
 function getStyle(element, att) {
     return self.getComputedStyle(element)[att];
 }
-export const observe = () => {
+exports.observe = () => {
     const endpoints = [];
     const mp = {};
     let options = {};
@@ -261,5 +263,5 @@ class LargestContentfulPaint {
         return JSON.stringify(this);
     }
 }
-export default LargestContentfulPaint;
+exports.default = LargestContentfulPaint;
 //# sourceMappingURL=largest-contentful-paint.js.map
