@@ -1,6 +1,6 @@
 {
   "name": "split-time",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "A JavaScript library for measuring FCP, LCP. Report real user measurements to tracking tool.",
   "main": "src/index.js",
   "scripts": {
