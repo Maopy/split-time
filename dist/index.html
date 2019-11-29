@@ -28,7 +28,10 @@
       console.log(list.getEntries(), 'native')
     })
       .observe({
-        entryTypes: ['navigation', 'resource', 'paint', 'largest-contentful-paint']
+        entryTypes: [
+          'navigation', 'resource', 'paint', 'largest-contentful-paint',
+          'first-input', 'layout-shift', 'longtask'
+        ]
       })
   </script>
 </head>
